@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# install R
+apk update && apk add R R-dev R-doc build-base jq
+
+# install package
+R -e "install.packages('jsonlite', repos = 'http://cran.rstudio.com/')"
+
+# run R script
+chmod +x script.R
+INPUT=`echo "$@" | jq '.n'`
+./script.R $INPUT
+
