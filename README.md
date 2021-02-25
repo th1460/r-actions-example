@@ -23,7 +23,7 @@ ibmcloud fn action update run run.zip --native --web true
 
 ```
 curl -H "Content-type: application/json" -d '{"n":10}' \
-https://${APIHOST}/api/v1/web/${NAMESPACE}/default/run.json/run
+https://${APIHOST}/api/v1/web/${NAMESPACE}/default/run.json
 ```
 
 The `${APIHOST}` and `${NAMESPACE}` can be get with:
