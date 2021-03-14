@@ -71,6 +71,44 @@ The `${APIHOST}` and `${NAMESPACE}` can be get with:
 ibmcloud fn action get run --url
 ```
 
+## Docker
+
+It is possible to use docker to deploy your function.
+
+You need a Dockerfile, build and push (Docker Hub only)
+
+```
+# dockerfile
+FROM openwhisk/dockerskeleton
+RUN apk update && apk add R R-dev R-doc build-base jq
+RUN R -e "install.packages('jsonlite', repos = 'http://cran.rstudio.com/')"
+
+# build
+docker -t th1460/ractions .
+
+# push
+docker push th1460/rasctions
+```
+
+The `exec` is modified because the step to install R, linux dependencies and R libraries can be changed to execute in the Docker build.
+
+```
+#!/bin/bash
+
+# run R script
+chmod +x script.R
+INPUT=`echo "$@" | jq '.s'`
+./script.R $INPUT
+```
+
+To deploy the functions you need to indicate the repository that is in Docker Hub `--docker th1460/ractions`
+
+```
+ibmcloud fn action create run run.zip --docker th1460/ractions
+```
+
+This approach could be interesting to reduce the time to build in the request of the function
+
 ## References
 
 - Preparing apps in Docker images: https://cloud.ibm.com/docs/openwhisk?topic=openwhisk-prep#prep_docker
