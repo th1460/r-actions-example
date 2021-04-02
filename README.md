@@ -17,8 +17,8 @@ R -e "install.packages('jsonlite', repos = 'http://cran.rstudio.com/')"
 
 # run R script
 chmod +x script.R # turn executable
-INPUT=`echo "$@" | jq '.s'` # get the input data in s param (see subsection Test)
-./script.R $INPUT # input as arg in script
+echo "$@" > input.json # set input
+./script.R # run script
 ```
 
 The `script.R` is set as:
@@ -27,48 +27,46 @@ The `script.R` is set as:
 #!/usr/bin/env Rscript
 
 # get input
-args <- commandArgs(trailingOnly=TRUE)
+input <- jsonlite::fromJSON("input.json", flatten = FALSE)
+input <- as.numeric(input)
 
 # function
 A <- function(x) x^2
 
-# input
-x <- as.numeric(args[1])
-
 # output (it is important set the output as JSON)
-cat(jsonlite::toJSON(list(side = x, area = A(x)), auto_unbox = TRUE)) 
+jsonlite::toJSON(list(side = input, area = A(input)), auto_unbox = TRUE)
 ```
 
 ## Deploy
 
 ```
-zip -r run.zip exec script.R
-ibmcloud fn action create run run.zip --native
+zip -r raction.zip exec script.R
+ibmcloud fn action create raction raction.zip --native
 ```
 
 ### Test
 
 ```
-ibmcloud fn action invoke run --result --param s 8
+ibmcloud fn action invoke raction --result --param s 8
 ```
 
 ## Web Actions
 
 ```
-ibmcloud fn action update run run.zip --native --web true
+ibmcloud fn action update raction raction.zip --native --web true
 ```
 
 ### Request
 
 ```
 curl -H "Content-type: application/json" -d '{"s":10}' \
-https://${APIHOST}/api/v1/web/${NAMESPACE}/default/run.json
+https://${APIHOST}/api/v1/web/${NAMESPACE}/default/raction.json
 ```
 
 The `${APIHOST}` and `${NAMESPACE}` can be get with:
 
 ```
-ibmcloud fn action get run --url
+ibmcloud fn action get raction --url
 ```
 
 ## Docker
@@ -80,14 +78,14 @@ You need a Dockerfile, build and push (Docker Hub only)
 ```
 # dockerfile
 FROM openwhisk/dockerskeleton
-RUN apk update && apk add R R-dev R-doc build-base jq
+RUN apk update && apk add R R-dev R-doc build-base
 RUN R -e "install.packages('jsonlite', repos = 'http://cran.rstudio.com/')"
 
 # build
-docker -t th1460/ractions .
+docker -t th1460/raction .
 
 # push
-docker push th1460/rasctions
+docker push th1460/raction
 ```
 
 The `exec` is modified because the step to install R, linux dependencies and R libraries can be changed to execute in the Docker build.
@@ -96,15 +94,15 @@ The `exec` is modified because the step to install R, linux dependencies and R l
 #!/bin/bash
 
 # run R script
-chmod +x script.R
-INPUT=`echo "$@" | jq '.s'`
-./script.R $INPUT
+chmod +x script.R # turn executable
+echo "$@" > input.json # set input
+./script.R # run script
 ```
 
 To deploy the functions you need to indicate the repository that is in Docker Hub `--docker th1460/ractions`
 
 ```
-ibmcloud fn action create run run.zip --docker th1460/ractions
+ibmcloud fn action create raction raction.zip --docker th1460/ractions
 ```
 
 This approach could be interesting to reduce the time to build in the request of the function
