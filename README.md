@@ -105,7 +105,7 @@ To deploy the functions you need to indicate the repository that is in Docker Hu
 ibmcloud fn action create raction raction.zip --docker th1460/ractions
 ```
 
-This approach could be interesting to reduce the time to build in the request of the function
+This approach could be interesting to reduce the time to build in the request of the function. In comparing the speed, this approach was faster than the first one.
 
 ## References
 
